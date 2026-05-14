@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -220,10 +221,24 @@
     color: #334155;
     word-break: break-word;
     line-height: 1.4;
+    cursor: text;
   }
   .task.done .task-text {
     text-decoration: line-through;
     color: #94a3b8;
+  }
+  .task-edit-input {
+    flex: 1;
+    font-size: 14px;
+    color: #334155;
+    background: white;
+    border: 1px solid #60a5fa;
+    border-radius: 4px;
+    padding: 2px 6px;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+    line-height: 1.4;
   }
 
   .delete-btn {
@@ -302,7 +317,7 @@
   <div class="week-grid" id="weekGrid"></div>
 
   <div class="footer">
-    💡 Перетаскивай задачи между днями, кликай на квадратик чтобы отметить готово
+    💡 Перетаскивай задачи между днями · клик по квадратику — готово · двойной клик по тексту — редактировать
   </div>
 </div>
 
@@ -481,6 +496,40 @@ function createTaskElement(task, sourceDateKey) {
   const text = document.createElement('span');
   text.className = 'task-text';
   text.textContent = task.text;
+  text.title = 'Двойной клик для редактирования';
+
+  text.addEventListener('dblclick', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'task-edit-input';
+    input.value = task.text;
+
+    let done = false;
+    const commit = (save) => {
+      if (done) return;
+      done = true;
+      if (save) {
+        const newText = input.value.trim();
+        if (newText && newText !== task.text) {
+          task.text = newText;
+          saveTasks();
+        }
+      }
+      taskEl.draggable = true;
+      render();
+    };
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') commit(true);
+      else if (e.key === 'Escape') commit(false);
+    });
+    input.addEventListener('blur', () => commit(true));
+
+    taskEl.draggable = false;
+    text.replaceWith(input);
+    input.focus();
+    input.select();
+  });
 
   const del = document.createElement('button');
   del.className = 'delete-btn';
